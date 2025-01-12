@@ -12,14 +12,10 @@ openId = os.environ.get("OPEN_ID")
 # 天气预报模板ID
 weather_template_id = os.environ.get("TEMPLATE_ID")
 
+
 def get_weather(my_city):
-    urls = ["http://www.weather.com.cn/textFC/hb.shtml",
-            "http://www.weather.com.cn/textFC/db.shtml",
-            "http://www.weather.com.cn/textFC/hd.shtml",
-            "http://www.weather.com.cn/textFC/hz.shtml",
-            "http://www.weather.com.cn/textFC/hn.shtml",
-            "http://www.weather.com.cn/textFC/xb.shtml",
-            "http://www.weather.com.cn/textFC/xn.shtml"
+    urls = [
+            'https://www.weather.com.cn/textFC/guangxi.shtml'
             ]
     for url in urls:
         resp = requests.get(url)
@@ -34,6 +30,7 @@ def get_weather(my_city):
                 # 这里倒着数，因为每个省会的td结构跟其他不一样
                 city_td = tds[-8]
                 this_city = list(city_td.stripped_strings)[0]
+                print(this_city)
                 if this_city == my_city:
 
                     high_temp_td = tds[-5]
@@ -108,26 +105,53 @@ def send_weather(access_token, weather):
             "wind_dir": {
                 "value": weather[3]
             },
-            "today_note": {
-                "value": get_daily_love()
-            }
+            # "today_note": {
+            #     "value": get_daily_love()
+            # }
         }
     }
     url = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}'.format(access_token)
     print(requests.post(url, json.dumps(body)).text)
 
 
+def send_timetable(access_token, message):
+    body = {
+        "touser": openId,
+        "template_id": timetable_template_id.strip(),
+        "url": "https://weixin.qq.com",
+        "data": {
+            "message": {
+                "value": message
+            },
+        }
+    }
+    url = 'https://api.weixin.qq.com/cgi-bin/message/template/send?access_token={}'.format(access_token)
+    print(requests.post(url, json.dumps(body)).text)
 
-def weather_report(this_city):
+
+def weather_report(city):
     # 1.获取access_token
     access_token = get_access_token()
     # 2. 获取天气
-    weather = get_weather(this_city)
+    weather = get_weather(city)
     print(f"天气信息： {weather}")
     # 3. 发送消息
     send_weather(access_token, weather)
 
 
+def timetable(message):
+    # 1.获取access_token
+    access_token = get_access_token()
+    # 3. 发送消息
+    send_timetable(access_token, message)
+
 
 if __name__ == '__main__':
-    weather_report("淄博")
+    weather_report("海城")
+    # timetable("第二教学楼十分钟后开始英语课")
+
+    # schedule.every().day.at("07:30").do(weather_report, "海城")
+    
+    # while True:
+    #    schedule.run_pending()
+    #    time.sleep(1)
